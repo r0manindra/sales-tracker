@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Visit Tracker</title>
+    <title>Sales Visit Tracker - Secure Team Version</title>
+    
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         * {
             margin: 0;
@@ -42,10 +46,194 @@
             line-height: 1.6;
         }
 
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--danger);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .login-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        /* Main App Container */
+        .app-container {
+            display: none;
+        }
+
+        .app-container.active {
+            display: block;
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
+        }
+
+        /* User Info Bar */
+        .user-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.75rem 2rem;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--success);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Adjust container for user bar */
+        .app-container .container {
+            padding-top: 5rem;
         }
 
         /* Glass morphism card */
@@ -194,7 +382,7 @@
         .stat-card.warning .stat-value { color: var(--warning); }
         .stat-card.danger .stat-value { color: var(--danger); }
 
-        /* Table */
+        /* Table and other styles remain the same... */
         .table-container {
             overflow-x: auto;
             border-radius: var(--radius-sm);
@@ -232,9 +420,10 @@
             background: var(--gray-50);
         }
 
-        /* Form Controls */
         input[type="text"],
         input[type="date"],
+        input[type="email"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
@@ -248,6 +437,8 @@
 
         input[type="text"]:focus,
         input[type="date"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
         select:focus,
         textarea:focus {
             outline: none;
@@ -260,7 +451,6 @@
             min-height: 60px;
         }
 
-        /* Checkbox */
         .checkbox-wrapper {
             display: flex;
             justify-content: center;
@@ -273,7 +463,6 @@
             accent-color: var(--primary);
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -293,11 +482,6 @@
             justify-content: center;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
         .modal-content {
             background: white;
             border-radius: var(--radius);
@@ -307,6 +491,11 @@
             max-height: 80vh;
             overflow-y: auto;
             animation: slideDown 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @keyframes slideDown {
@@ -366,7 +555,6 @@
             flex: 1;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 3rem;
@@ -379,14 +567,6 @@
             opacity: 0.5;
         }
 
-        /* Chart Container */
-        .chart-container {
-            padding: 1rem;
-            background: var(--gray-50);
-            border-radius: var(--radius-sm);
-            margin-top: 1rem;
-        }
-
         .chart-box {
             background: var(--gray-50);
             padding: 1.5rem;
@@ -394,7 +574,6 @@
             border: 1px solid var(--gray-200);
         }
 
-        /* Funnel Chart */
         .funnel-segment {
             background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
@@ -416,10 +595,13 @@
         .funnel-segment.warning { background: linear-gradient(90deg, var(--warning) 0%, #d97706 100%); }
         .funnel-segment.danger { background: linear-gradient(90deg, var(--danger) 0%, #dc2626 100%); }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
+            }
+
+            .user-bar {
+                padding: 0.5rem 1rem;
             }
 
             .header {
@@ -445,7 +627,6 @@
             }
         }
 
-        /* Loading Animation */
         .loading {
             display: inline-block;
             width: 20px;
@@ -460,7 +641,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -480,121 +660,170 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="card">
-            <div class="header">
-                <div>
-                    <h1>Sales Visit Tracker</h1>
-                    <p class="header-subtitle">Dokumentieren und verfolgen Sie Ihre Lokalbesuche effizient</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="toggleUsers()">
-                        👥 Benutzer
-                    </button>
-                    <button class="btn btn-secondary" onclick="exportToCSV()">
-                        📥 CSV Export
-                    </button>
-                    <button class="btn btn-success" onclick="toggleStats()">
-                        📊 Statistiken
-                    </button>
-                    <button class="btn btn-primary" onclick="addVisit()">
-                        ➕ Neuer Besuch
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Statistics -->
-        <div id="statsContainer" style="display: none;">
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-label">Gesamt Besuche</div>
-                    <div class="stat-value" id="totalVisits">0</div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-label">Entscheidungsträger</div>
-                    <div class="stat-value" id="decisionMakers">0</div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-label">Folgetermine</div>
-                    <div class="stat-value" id="followUps">0</div>
-                </div>
-                <div class="stat-card danger">
-                    <div class="stat-label">Kein Interesse</div>
-                    <div class="stat-value" id="noInterest">0</div>
-                </div>
+    <!-- Login Screen -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1 class="login-title">Sales Tracker</h1>
+                <p class="login-subtitle">Team Login</p>
             </div>
             
-            <!-- Charts -->
-            <div class="card" style="margin-top: 1.5rem;">
-                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--dark);">📊 Detaillierte Analysen</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    <!-- Status Distribution Pie Chart -->
-                    <div class="chart-box">
-                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Status Verteilung</h4>
-                        <canvas id="statusChart" width="300" height="300"></canvas>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Mitarbeiter Name</label>
+                    <input type="text" id="userName" class="form-input" placeholder="Ihr Name (für Zuordnung)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Team Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="team@salestracker.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Team Passwort</label>
+                    <input type="password" id="password" class="form-input" placeholder="Passwort" required>
+                    <div id="errorMessage" class="error-message">Login fehlgeschlagen. Bitte prüfen Sie die Zugangsdaten.</div>
+                </div>
+                
+                <button type="submit" class="login-button" id="loginBtn">
+                    Anmelden
+                </button>
+            </form>
+            
+            <div class="login-info">
+                <strong>Info:</strong> Alle Team-Mitglieder verwenden die gleichen Zugangsdaten. 
+                Der Name dient nur zur Zuordnung der Einträge.
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appContainer" class="app-container">
+        <!-- User Bar -->
+        <div class="user-bar">
+            <div class="user-info">
+                <span class="status-indicator">✅ Online</span>
+                <span>Angemeldet als: <span class="user-name" id="currentUserName">-</span></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                Abmelden
+            </button>
+        </div>
+
+        <div class="container">
+            <!-- Header -->
+            <div class="card">
+                <div class="header">
+                    <div>
+                        <h1>Sales Visit Tracker</h1>
+                        <p class="header-subtitle">Team-synchronisierte Lokalbesuche in Echtzeit</p>
                     </div>
-                    
-                    <!-- User Performance Bar Chart -->
-                    <div class="chart-box">
-                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Besuche pro Mitarbeiter</h4>
-                        <canvas id="userChart" width="300" height="300"></canvas>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="toggleUsers()">
+                            👥 Team
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportToCSV()">
+                            📥 CSV Export
+                        </button>
+                        <button class="btn btn-success" onclick="toggleStats()">
+                            📊 Statistiken
+                        </button>
+                        <button class="btn btn-primary" onclick="addVisit()">
+                            ➕ Neuer Besuch
+                        </button>
                     </div>
-                    
-                    <!-- Timeline Chart -->
-                    <div class="chart-box" style="grid-column: span 2;">
-                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Zeitverlauf (letzte 7 Tage)</h4>
-                        <canvas id="timelineChart" width="600" height="250"></canvas>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div id="statsContainer" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-label">Gesamt Besuche</div>
+                        <div class="stat-value" id="totalVisits">0</div>
                     </div>
-                    
-                    <!-- Conversion Funnel -->
-                    <div class="chart-box">
-                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Conversion Funnel</h4>
-                        <div id="funnelChart"></div>
+                    <div class="stat-card success">
+                        <div class="stat-label">Entscheidungsträger</div>
+                        <div class="stat-value" id="decisionMakers">0</div>
                     </div>
-                    
-                    <!-- Success Rate Gauge -->
-                    <div class="chart-box">
-                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Erfolgsquote</h4>
-                        <canvas id="gaugeChart" width="300" height="200"></canvas>
-                        <div style="text-align: center; margin-top: 0.5rem;">
-                            <span id="successRateText" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">0%</span>
+                    <div class="stat-card warning">
+                        <div class="stat-label">Folgetermine</div>
+                        <div class="stat-value" id="followUps">0</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-label">Kein Interesse</div>
+                        <div class="stat-value" id="noInterest">0</div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--dark);">📊 Detaillierte Analysen</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                        <div class="chart-box">
+                            <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Status Verteilung</h4>
+                            <canvas id="statusChart" width="300" height="300"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Besuche pro Mitarbeiter</h4>
+                            <canvas id="userChart" width="300" height="300"></canvas>
+                        </div>
+                        <div class="chart-box" style="grid-column: span 2;">
+                            <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Zeitverlauf (letzte 7 Tage)</h4>
+                            <canvas id="timelineChart" width="600" height="250"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Conversion Funnel</h4>
+                            <div id="funnelChart"></div>
+                        </div>
+                        <div class="chart-box">
+                            <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Erfolgsquote</h4>
+                            <canvas id="gaugeChart" width="300" height="200"></canvas>
+                            <div style="text-align: center; margin-top: 0.5rem;">
+                                <span id="successRateText" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">0%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Table -->
-        <div class="card">
-            <div class="table-container">
-                <table id="visitsTable">
-                    <thead>
-                        <tr>
-                            <th>Lokal Name</th>
-                            <th>Entscheidungsträger</th>
-                            <th>Folgetermin</th>
-                            <th>Kein Interesse</th>
-                            <th>Zugewiesen an</th>
-                            <th>Kommentar</th>
-                            <th>Datum</th>
-                            <th>Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="visitsBody">
-                        <!-- Visits will be added here -->
-                    </tbody>
-                </table>
-                <div id="emptyState" class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <p>Noch keine Besuche dokumentiert</p>
-                    <button class="btn btn-primary" onclick="addVisit()" style="margin-top: 1rem;">
-                        Ersten Besuch hinzufügen
-                    </button>
+            <!-- Table -->
+            <div class="card">
+                <div class="table-container">
+                    <table id="visitsTable">
+                        <thead>
+                            <tr>
+                                <th>Lokal Name</th>
+                                <th>Entscheidungsträger</th>
+                                <th>Folgetermin</th>
+                                <th>Kein Interesse</th>
+                                <th>Zugewiesen an</th>
+                                <th>Kommentar</th>
+                                <th>Datum</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="visitsBody">
+                        </tbody>
+                    </table>
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Noch keine Besuche dokumentiert</p>
+                        <button class="btn btn-primary" onclick="addVisit()" style="margin-top: 1rem;">
+                            Ersten Besuch hinzufügen
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -604,15 +833,13 @@
     <div id="userModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Benutzer verwalten</h2>
+                <h2 class="modal-title">Team Mitglieder</h2>
             </div>
             <div class="input-group">
-                <input type="text" id="newUserInput" placeholder="Neuen Benutzer hinzufügen..." onkeypress="if(event.key==='Enter') addUser()">
+                <input type="text" id="newUserInput" placeholder="Neuen Mitarbeiter hinzufügen..." onkeypress="if(event.key==='Enter') addUser()">
                 <button class="btn btn-primary" onclick="addUser()">➕</button>
             </div>
-            <div class="user-list" id="userList">
-                <!-- Users will be listed here -->
-            </div>
+            <div class="user-list" id="userList"></div>
             <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
                 <button class="btn btn-secondary" onclick="closeUserModal()">Schließen</button>
             </div>
@@ -623,54 +850,272 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // ============================================
+        // KONFIGURATION - NUR HIER ANPASSEN!
+        // ============================================
+        const SUPABASE_URL = 'https://orptvjhavgfrvknaxcae.supabase.co';
+        const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // <-- HIER DEINEN SUPABASE ANON KEY EINFÜGEN!
+        
+        // Team Account Credentials - Diese gibst du deinem Team
+        const TEAM_EMAIL = 'team@salestracker.com'; // <-- Diesen Account in Supabase erstellen!
+        const TEAM_PASSWORD_HINT = 'Team Passwort eingeben'; // Nur als Hinweis
+        
+        // ============================================
+        // APP CODE
+        // ============================================
+        
+        // Supabase Client
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         // State Management
-        let visits = JSON.parse(localStorage.getItem('salesVisits')) || [];
-        let users = JSON.parse(localStorage.getItem('salesUsers')) || ['Max Mustermann', 'Anna Schmidt', 'Peter Weber'];
+        let currentUser = null;
+        let currentUserName = null;
+        let visits = [];
+        let users = [];
         let statsVisible = false;
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderVisits();
-            updateStats();
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUserName = localStorage.getItem('userName') || 'Team Member';
+                showApp();
+            }
         });
 
-        // Add Visit
-        function addVisit() {
-            const newVisit = {
-                id: Date.now(),
-                lokalName: '',
-                entscheidungstraeger: false,
-                folgetermin: false,
-                keinInteresse: false,
-                assignedUser: users[0] || '',
-                kommentar: '',
-                datum: new Date().toISOString().split('T')[0]
-            };
-            visits.push(newVisit);
-            saveData();
+        // Handle Login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const userName = document.getElementById('userName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Reset error
+            errorMsg.classList.remove('show');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Anmelden...';
+            
+            try {
+                // Sign in with Supabase Auth
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                // Save user name locally
+                currentUser = data.user;
+                currentUserName = userName;
+                localStorage.setItem('userName', userName);
+                
+                // Show app
+                showApp();
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMsg.classList.add('show');
+                document.getElementById('password').classList.add('error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Anmelden';
+            }
+        }
+
+        // Show App after Login
+        async function showApp() {
+            // Hide login, show app
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+            
+            // Update UI
+            document.getElementById('currentUserName').textContent = currentUserName;
+            
+            // Initialize app
+            await initApp();
+        }
+
+        // Logout
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            localStorage.removeItem('userName');
+            location.reload();
+        }
+
+        // Initialize Application
+        async function initApp() {
+            try {
+                await loadVisits();
+                await loadUsers();
+                setupRealtimeSubscriptions();
+                renderVisits();
+                updateStats();
+                showToast(`Willkommen ${currentUserName}!`, 'success');
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showToast('Verbindungsfehler - Bitte Seite neu laden', 'error');
+            }
+        }
+
+        // Load Visits from Supabase
+        async function loadVisits() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('visits')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                visits = data || [];
+            } catch (error) {
+                console.error('Error loading visits:', error);
+                showToast('Fehler beim Laden der Besuche', 'error');
+            }
+        }
+
+        // Load Users from Supabase
+        async function loadUsers() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .order('name');
+                
+                if (error) throw error;
+                
+                users = data ? data.map(u => u.name) : [];
+                
+                // Add current user if not exists
+                if (currentUserName && !users.includes(currentUserName)) {
+                    await supabaseClient.from('users').insert([{ name: currentUserName }]);
+                    users.push(currentUserName);
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        // Setup Realtime Subscriptions
+        function setupRealtimeSubscriptions() {
+            // Subscribe to visits changes
+            supabaseClient
+                .channel('visits-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'visits' },
+                    handleVisitChange
+                )
+                .subscribe();
+            
+            // Subscribe to users changes
+            supabaseClient
+                .channel('users-changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'users' },
+                    handleUserChange
+                )
+                .subscribe();
+        }
+
+        // Handle realtime changes
+        async function handleVisitChange(payload) {
+            if (payload.eventType === 'INSERT') {
+                if (!visits.find(v => v.id === payload.new.id)) {
+                    visits.unshift(payload.new);
+                }
+            } else if (payload.eventType === 'UPDATE') {
+                const index = visits.findIndex(v => v.id === payload.new.id);
+                if (index !== -1) visits[index] = payload.new;
+            } else if (payload.eventType === 'DELETE') {
+                visits = visits.filter(v => v.id !== payload.old.id);
+            }
+            
             renderVisits();
             updateStats();
-            showToast('Neuer Besuch hinzugefügt');
+        }
+
+        async function handleUserChange() {
+            await loadUsers();
+            renderVisits();
+        }
+
+        // Add Visit
+        async function addVisit() {
+            try {
+                const newVisit = {
+                    lokal_name: '',
+                    entscheidungstraeger: false,
+                    folgetermin: false,
+                    kein_interesse: false,
+                    assigned_user: currentUserName,
+                    kommentar: '',
+                    datum: new Date().toISOString().split('T')[0],
+                    created_by: currentUserName
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('visits')
+                    .insert([newVisit])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!visits.find(v => v.id === data.id)) {
+                    visits.unshift(data);
+                    renderVisits();
+                    updateStats();
+                }
+                
+                showToast('Neuer Besuch hinzugefügt', 'success');
+            } catch (error) {
+                console.error('Error adding visit:', error);
+                showToast('Fehler beim Hinzufügen', 'error');
+            }
         }
 
         // Delete Visit
-        function deleteVisit(id) {
-            if (confirm('Möchten Sie diesen Besuch wirklich löschen?')) {
-                visits = visits.filter(v => v.id !== id);
-                saveData();
-                renderVisits();
-                updateStats();
-                showToast('Besuch gelöscht');
+        async function deleteVisit(id) {
+            if (!confirm('Möchten Sie diesen Besuch wirklich löschen?')) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('visits')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showToast('Besuch gelöscht', 'success');
+            } catch (error) {
+                console.error('Error deleting visit:', error);
+                showToast('Fehler beim Löschen', 'error');
             }
         }
 
         // Update Visit
-        function updateVisit(id, field, value) {
-            const visit = visits.find(v => v.id === id);
-            if (visit) {
-                visit[field] = value;
-                saveData();
-                updateStats();
+        async function updateVisit(id, field, value) {
+            try {
+                const updateData = { [field]: value };
+                updateData.updated_at = new Date().toISOString();
+                
+                const { error } = await supabaseClient
+                    .from('visits')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                const visit = visits.find(v => v.id === id);
+                if (visit) {
+                    visit[field] = value;
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error updating visit:', error);
+                showToast('Fehler beim Aktualisieren', 'error');
             }
         }
 
@@ -689,8 +1134,8 @@
             tbody.innerHTML = visits.map(visit => `
                 <tr>
                     <td>
-                        <input type="text" value="${visit.lokalName}" 
-                               onchange="updateVisit(${visit.id}, 'lokalName', this.value)"
+                        <input type="text" value="${visit.lokal_name || ''}" 
+                               onchange="updateVisit(${visit.id}, 'lokal_name', this.value)"
                                placeholder="Lokal Name...">
                     </td>
                     <td>
@@ -707,15 +1152,15 @@
                     </td>
                     <td>
                         <div class="checkbox-wrapper">
-                            <input type="checkbox" ${visit.keinInteresse ? 'checked' : ''}
-                                   onchange="updateVisit(${visit.id}, 'keinInteresse', this.checked)">
+                            <input type="checkbox" ${visit.kein_interesse ? 'checked' : ''}
+                                   onchange="updateVisit(${visit.id}, 'kein_interesse', this.checked)">
                         </div>
                     </td>
                     <td>
-                        <select onchange="updateVisit(${visit.id}, 'assignedUser', this.value)">
+                        <select onchange="updateVisit(${visit.id}, 'assigned_user', this.value)">
                             <option value="">Wählen...</option>
                             ${users.map(user => `
-                                <option value="${user}" ${visit.assignedUser === user ? 'selected' : ''}>${user}</option>
+                                <option value="${user}" ${visit.assigned_user === user ? 'selected' : ''}>${user}</option>
                             `).join('')}
                         </select>
                     </td>
@@ -734,20 +1179,18 @@
             `).join('');
         }
 
-        // Update Statistics
+        // All chart and other functions remain the same...
         function updateStats() {
             document.getElementById('totalVisits').textContent = visits.length;
             document.getElementById('decisionMakers').textContent = visits.filter(v => v.entscheidungstraeger).length;
             document.getElementById('followUps').textContent = visits.filter(v => v.folgetermin).length;
-            document.getElementById('noInterest').textContent = visits.filter(v => v.keinInteresse).length;
+            document.getElementById('noInterest').textContent = visits.filter(v => v.kein_interesse).length;
             
-            // Update charts if stats are visible
             if (statsVisible) {
                 drawCharts();
             }
         }
 
-        // Toggle Statistics
         function toggleStats() {
             statsVisible = !statsVisible;
             document.getElementById('statsContainer').style.display = statsVisible ? 'block' : 'none';
@@ -756,7 +1199,6 @@
             }
         }
 
-        // Draw all charts
         function drawCharts() {
             drawStatusPieChart();
             drawUserBarChart();
@@ -765,7 +1207,7 @@
             drawGaugeChart();
         }
 
-        // Status Pie Chart
+        // Chart functions (same as before)
         function drawStatusPieChart() {
             const canvas = document.getElementById('statusChart');
             const ctx = canvas.getContext('2d');
@@ -777,8 +1219,8 @@
             const data = [
                 { label: 'Entscheidungsträger', value: visits.filter(v => v.entscheidungstraeger).length, color: '#10b981' },
                 { label: 'Folgetermin', value: visits.filter(v => v.folgetermin).length, color: '#f59e0b' },
-                { label: 'Kein Interesse', value: visits.filter(v => v.keinInteresse).length, color: '#ef4444' },
-                { label: 'Offen', value: visits.filter(v => !v.entscheidungstraeger && !v.folgetermin && !v.keinInteresse).length, color: '#94a3b8' }
+                { label: 'Kein Interesse', value: visits.filter(v => v.kein_interesse).length, color: '#ef4444' },
+                { label: 'Offen', value: visits.filter(v => !v.entscheidungstraeger && !v.folgetermin && !v.kein_interesse).length, color: '#94a3b8' }
             ].filter(d => d.value > 0);
             
             if (data.length === 0) {
@@ -799,7 +1241,6 @@
             data.forEach((segment, i) => {
                 const angle = (segment.value / total) * Math.PI * 2;
                 
-                // Draw segment
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
@@ -807,7 +1248,6 @@
                 ctx.fillStyle = segment.color;
                 ctx.fill();
                 
-                // Draw label
                 const labelAngle = currentAngle + angle / 2;
                 const labelX = centerX + Math.cos(labelAngle) * (radius * 1.3);
                 const labelY = centerY + Math.sin(labelAngle) * (radius * 1.3);
@@ -820,20 +1260,17 @@
                 currentAngle += angle;
             });
             
-            // Draw center circle for donut effect
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
             ctx.fill();
             
-            // Center text
             ctx.fillStyle = '#1e293b';
             ctx.font = 'bold 24px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(total.toString(), centerX, centerY + 8);
         }
 
-        // User Bar Chart
         function drawUserBarChart() {
             const canvas = document.getElementById('userChart');
             const ctx = canvas.getContext('2d');
@@ -844,7 +1281,7 @@
             
             const userStats = users.map(user => ({
                 name: user,
-                count: visits.filter(v => v.assignedUser === user).length
+                count: visits.filter(v => v.assigned_user === user).length
             }));
             
             if (userStats.length === 0) {
@@ -864,20 +1301,17 @@
                 const x = 30 + i * (barWidth + 10);
                 const y = height - 30 - barHeight;
                 
-                // Draw bar with gradient
                 const gradient = ctx.createLinearGradient(0, y, 0, height - 30);
                 gradient.addColorStop(0, '#6366f1');
                 gradient.addColorStop(1, '#4f46e5');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(x, y, barWidth, barHeight);
                 
-                // Draw value on top
                 ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 14px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(user.count.toString(), x + barWidth/2, y - 5);
                 
-                // Draw name
                 ctx.save();
                 ctx.translate(x + barWidth/2, height - 5);
                 ctx.rotate(-Math.PI/6);
@@ -887,7 +1321,6 @@
                 ctx.restore();
             });
             
-            // Draw axes
             ctx.strokeStyle = '#cbd5e1';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -898,7 +1331,6 @@
             ctx.stroke();
         }
 
-        // Timeline Chart
         function drawTimelineChart() {
             const canvas = document.getElementById('timelineChart');
             const ctx = canvas.getContext('2d');
@@ -907,7 +1339,6 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            // Get last 7 days
             const today = new Date();
             const days = [];
             for (let i = 6; i >= 0; i--) {
@@ -925,7 +1356,6 @@
             const pointSpacing = (width - 80) / (data.length - 1);
             const chartHeight = height - 60;
             
-            // Draw grid lines
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
             for (let i = 0; i <= 5; i++) {
@@ -936,7 +1366,6 @@
                 ctx.stroke();
             }
             
-            // Draw line chart
             ctx.strokeStyle = '#6366f1';
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -953,12 +1382,10 @@
             });
             ctx.stroke();
             
-            // Draw points and values
             data.forEach((point, i) => {
                 const x = 40 + i * pointSpacing;
                 const y = height - 30 - (point.count / maxCount) * chartHeight;
                 
-                // Draw point
                 ctx.beginPath();
                 ctx.arc(x, y, 5, 0, Math.PI * 2);
                 ctx.fillStyle = '#6366f1';
@@ -967,19 +1394,16 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Draw value
                 ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 12px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(point.count.toString(), x, y - 10);
                 
-                // Draw date
                 const dateStr = new Date(point.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
                 ctx.font = '11px sans-serif';
                 ctx.fillText(dateStr, x, height - 10);
             });
             
-            // Draw axes
             ctx.strokeStyle = '#cbd5e1';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -990,14 +1414,13 @@
             ctx.stroke();
         }
 
-        // Funnel Chart
         function drawFunnelChart() {
             const container = document.getElementById('funnelChart');
             const total = visits.length || 1;
             
             const stages = [
                 { label: 'Alle Besuche', value: visits.length, class: '' },
-                { label: 'Interessiert', value: visits.filter(v => !v.keinInteresse).length, class: 'success' },
+                { label: 'Interessiert', value: visits.filter(v => !v.kein_interesse).length, class: 'success' },
                 { label: 'Entscheidungsträger', value: visits.filter(v => v.entscheidungstraeger).length, class: 'warning' },
                 { label: 'Folgetermin', value: visits.filter(v => v.folgetermin).length, class: 'danger' }
             ];
@@ -1013,7 +1436,6 @@
             }).join('');
         }
 
-        // Gauge Chart (Success Rate)
         function drawGaugeChart() {
             const canvas = document.getElementById('gaugeChart');
             const ctx = canvas.getContext('2d');
@@ -1030,28 +1452,24 @@
             const centerY = height - 30;
             const radius = Math.min(width, height) / 2 - 20;
             
-            // Draw background arc
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, Math.PI, 0);
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 20;
             ctx.stroke();
             
-            // Draw progress arc
             const angle = Math.PI + (Math.PI * percentage / 100);
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, Math.PI, angle);
             
-            // Color based on percentage
-            let color = '#ef4444'; // red
-            if (percentage > 30) color = '#f59e0b'; // orange
-            if (percentage > 60) color = '#10b981'; // green
+            let color = '#ef4444';
+            if (percentage > 30) color = '#f59e0b';
+            if (percentage > 60) color = '#10b981';
             
             ctx.strokeStyle = color;
             ctx.lineWidth = 20;
             ctx.stroke();
             
-            // Update text
             document.getElementById('successRateText').textContent = percentage + '%';
             document.getElementById('successRateText').style.color = color;
         }
@@ -1076,32 +1494,47 @@
             `).join('');
         }
 
-        function addUser() {
+        async function addUser() {
             const input = document.getElementById('newUserInput');
             const newUser = input.value.trim();
             
             if (newUser && !users.includes(newUser)) {
-                users.push(newUser);
-                saveData();
-                renderUsers();
-                renderVisits();
-                input.value = '';
-                showToast('Benutzer hinzugefügt');
+                try {
+                    const { error } = await supabaseClient
+                        .from('users')
+                        .insert([{ name: newUser }]);
+                    
+                    if (error && !error.message.includes('duplicate')) throw error;
+                    
+                    users.push(newUser);
+                    renderUsers();
+                    renderVisits();
+                    input.value = '';
+                    showToast('Mitarbeiter hinzugefügt', 'success');
+                } catch (error) {
+                    showToast('Fehler beim Hinzufügen', 'error');
+                }
             }
         }
 
-        function removeUser(user) {
-            if (confirm(`Möchten Sie "${user}" wirklich entfernen?`)) {
+        async function removeUser(user) {
+            if (!confirm(`Möchten Sie "${user}" wirklich entfernen?`)) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .delete()
+                    .eq('name', user);
+                
+                if (error) throw error;
+                
                 users = users.filter(u => u !== user);
-                visits.forEach(visit => {
-                    if (visit.assignedUser === user) {
-                        visit.assignedUser = '';
-                    }
-                });
-                saveData();
                 renderUsers();
                 renderVisits();
-                showToast('Benutzer entfernt');
+                showToast('Mitarbeiter entfernt', 'success');
+            } catch (error) {
+                console.error('Error removing user:', error);
+                showToast('Fehler beim Entfernen', 'error');
             }
         }
 
@@ -1109,16 +1542,16 @@
         function exportToCSV() {
             const headers = ['Lokal Name', 'Entscheidungsträger', 'Folgetermin', 'Kein Interesse', 'Zugewiesen an', 'Kommentar', 'Datum'];
             const rows = visits.map(v => [
-                v.lokalName || '',
+                v.lokal_name || '',
                 v.entscheidungstraeger ? 'Ja' : 'Nein',
                 v.folgetermin ? 'Ja' : 'Nein',
-                v.keinInteresse ? 'Ja' : 'Nein',
-                v.assignedUser || '',
+                v.kein_interesse ? 'Ja' : 'Nein',
+                v.assigned_user || '',
                 v.kommentar || '',
                 v.datum || ''
             ]);
             
-            let csvContent = '\uFEFF'; // BOM for UTF-8
+            let csvContent = '\uFEFF';
             csvContent += headers.join(';') + '\n';
             rows.forEach(row => {
                 csvContent += row.map(cell => `"${cell}"`).join(';') + '\n';
@@ -1130,20 +1563,16 @@
             link.download = `sales_visits_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
             
-            showToast('CSV exportiert');
-        }
-
-        // Save Data to LocalStorage
-        function saveData() {
-            localStorage.setItem('salesVisits', JSON.stringify(visits));
-            localStorage.setItem('salesUsers', JSON.stringify(users));
+            showToast('CSV exportiert', 'success');
         }
 
         // Toast Notification
-        function showToast(message) {
+        function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.classList.add('show');
+            toast.className = 'toast show';
+            if (type) toast.classList.add(type);
+            
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
