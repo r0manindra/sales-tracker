@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Visit Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Glass morphism card */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            padding: 0.5rem;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-100) 100%);
+            padding: 1.25rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card.primary .stat-value { color: var(--primary); }
+        .stat-card.success .stat-value { color: var(--success); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.danger .stat-value { color: var(--danger); }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            background: var(--gray-100);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Form Controls */
+        input[type="text"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.625rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Checkbox */
+        .checkbox-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+
+        input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .user-list {
+            margin: 1rem 0;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            padding: 1rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            margin-top: 1rem;
+        }
+
+        .chart-box {
+            background: var(--gray-50);
+            padding: 1.5rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        /* Funnel Chart */
+        .funnel-segment {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .funnel-segment:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .funnel-segment.success { background: linear-gradient(90deg, var(--success) 0%, #059669 100%); }
+        .funnel-segment.warning { background: linear-gradient(90deg, var(--warning) 0%, #d97706 100%); }
+        .funnel-segment.danger { background: linear-gradient(90deg, var(--danger) 0%, #dc2626 100%); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .btn {
+                font-size: 0.875rem;
+                padding: 0.5rem 1rem;
+            }
+
+            table {
+                font-size: 0.875rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gray-300);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--dark);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-xl);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h1>Sales Visit Tracker</h1>
+                    <p class="header-subtitle">Dokumentieren und verfolgen Sie Ihre Lokalbesuche effizient</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="toggleUsers()">
+                        👥 Benutzer
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportToCSV()">
+                        📥 CSV Export
+                    </button>
+                    <button class="btn btn-success" onclick="toggleStats()">
+                        📊 Statistiken
+                    </button>
+                    <button class="btn btn-primary" onclick="addVisit()">
+                        ➕ Neuer Besuch
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div id="statsContainer" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-label">Gesamt Besuche</div>
+                    <div class="stat-value" id="totalVisits">0</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-label">Entscheidungsträger</div>
+                    <div class="stat-value" id="decisionMakers">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Folgetermine</div>
+                    <div class="stat-value" id="followUps">0</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">Kein Interesse</div>
+                    <div class="stat-value" id="noInterest">0</div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--dark);">📊 Detaillierte Analysen</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <!-- Status Distribution Pie Chart -->
+                    <div class="chart-box">
+                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Status Verteilung</h4>
+                        <canvas id="statusChart" width="300" height="300"></canvas>
+                    </div>
+                    
+                    <!-- User Performance Bar Chart -->
+                    <div class="chart-box">
+                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Besuche pro Mitarbeiter</h4>
+                        <canvas id="userChart" width="300" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Timeline Chart -->
+                    <div class="chart-box" style="grid-column: span 2;">
+                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Zeitverlauf (letzte 7 Tage)</h4>
+                        <canvas id="timelineChart" width="600" height="250"></canvas>
+                    </div>
+                    
+                    <!-- Conversion Funnel -->
+                    <div class="chart-box">
+                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Conversion Funnel</h4>
+                        <div id="funnelChart"></div>
+                    </div>
+                    
+                    <!-- Success Rate Gauge -->
+                    <div class="chart-box">
+                        <h4 style="font-size: 1rem; font-weight: 500; margin-bottom: 1rem; color: var(--gray-700);">Erfolgsquote</h4>
+                        <canvas id="gaugeChart" width="300" height="200"></canvas>
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <span id="successRateText" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+            <div class="table-container">
+                <table id="visitsTable">
+                    <thead>
+                        <tr>
+                            <th>Lokal Name</th>
+                            <th>Entscheidungsträger</th>
+                            <th>Folgetermin</th>
+                            <th>Kein Interesse</th>
+                            <th>Zugewiesen an</th>
+                            <th>Kommentar</th>
+                            <th>Datum</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitsBody">
+                        <!-- Visits will be added here -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>Noch keine Besuche dokumentiert</p>
+                    <button class="btn btn-primary" onclick="addVisit()" style="margin-top: 1rem;">
+                        Ersten Besuch hinzufügen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Benutzer verwalten</h2>
+            </div>
+            <div class="input-group">
+                <input type="text" id="newUserInput" placeholder="Neuen Benutzer hinzufügen..." onkeypress="if(event.key==='Enter') addUser()">
+                <button class="btn btn-primary" onclick="addUser()">➕</button>
+            </div>
+            <div class="user-list" id="userList">
+                <!-- Users will be listed here -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="closeUserModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // State Management
+        let visits = JSON.parse(localStorage.getItem('salesVisits')) || [];
+        let users = JSON.parse(localStorage.getItem('salesUsers')) || ['Max Mustermann', 'Anna Schmidt', 'Peter Weber'];
+        let statsVisible = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderVisits();
+            updateStats();
+        });
+
+        // Add Visit
+        function addVisit() {
+            const newVisit = {
+                id: Date.now(),
+                lokalName: '',
+                entscheidungstraeger: false,
+                folgetermin: false,
+                keinInteresse: false,
+                assignedUser: users[0] || '',
+                kommentar: '',
+                datum: new Date().toISOString().split('T')[0]
+            };
+            visits.push(newVisit);
+            saveData();
+            renderVisits();
+            updateStats();
+            showToast('Neuer Besuch hinzugefügt');
+        }
+
+        // Delete Visit
+        function deleteVisit(id) {
+            if (confirm('Möchten Sie diesen Besuch wirklich löschen?')) {
+                visits = visits.filter(v => v.id !== id);
+                saveData();
+                renderVisits();
+                updateStats();
+                showToast('Besuch gelöscht');
+            }
+        }
+
+        // Update Visit
+        function updateVisit(id, field, value) {
+            const visit = visits.find(v => v.id === id);
+            if (visit) {
+                visit[field] = value;
+                saveData();
+                updateStats();
+            }
+        }
+
+        // Render Visits
+        function renderVisits() {
+            const tbody = document.getElementById('visitsBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (visits.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = visits.map(visit => `
+                <tr>
+                    <td>
+                        <input type="text" value="${visit.lokalName}" 
+                               onchange="updateVisit(${visit.id}, 'lokalName', this.value)"
+                               placeholder="Lokal Name...">
+                    </td>
+                    <td>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" ${visit.entscheidungstraeger ? 'checked' : ''}
+                                   onchange="updateVisit(${visit.id}, 'entscheidungstraeger', this.checked)">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" ${visit.folgetermin ? 'checked' : ''}
+                                   onchange="updateVisit(${visit.id}, 'folgetermin', this.checked)">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" ${visit.keinInteresse ? 'checked' : ''}
+                                   onchange="updateVisit(${visit.id}, 'keinInteresse', this.checked)">
+                        </div>
+                    </td>
+                    <td>
+                        <select onchange="updateVisit(${visit.id}, 'assignedUser', this.value)">
+                            <option value="">Wählen...</option>
+                            ${users.map(user => `
+                                <option value="${user}" ${visit.assignedUser === user ? 'selected' : ''}>${user}</option>
+                            `).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <textarea placeholder="Kommentar..." 
+                                  onchange="updateVisit(${visit.id}, 'kommentar', this.value)">${visit.kommentar || ''}</textarea>
+                    </td>
+                    <td>
+                        <input type="date" value="${visit.datum}" 
+                               onchange="updateVisit(${visit.id}, 'datum', this.value)">
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteVisit(${visit.id})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update Statistics
+        function updateStats() {
+            document.getElementById('totalVisits').textContent = visits.length;
+            document.getElementById('decisionMakers').textContent = visits.filter(v => v.entscheidungstraeger).length;
+            document.getElementById('followUps').textContent = visits.filter(v => v.folgetermin).length;
+            document.getElementById('noInterest').textContent = visits.filter(v => v.keinInteresse).length;
+            
+            // Update charts if stats are visible
+            if (statsVisible) {
+                drawCharts();
+            }
+        }
+
+        // Toggle Statistics
+        function toggleStats() {
+            statsVisible = !statsVisible;
+            document.getElementById('statsContainer').style.display = statsVisible ? 'block' : 'none';
+            if (statsVisible) {
+                drawCharts();
+            }
+        }
+
+        // Draw all charts
+        function drawCharts() {
+            drawStatusPieChart();
+            drawUserBarChart();
+            drawTimelineChart();
+            drawFunnelChart();
+            drawGaugeChart();
+        }
+
+        // Status Pie Chart
+        function drawStatusPieChart() {
+            const canvas = document.getElementById('statusChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const data = [
+                { label: 'Entscheidungsträger', value: visits.filter(v => v.entscheidungstraeger).length, color: '#10b981' },
+                { label: 'Folgetermin', value: visits.filter(v => v.folgetermin).length, color: '#f59e0b' },
+                { label: 'Kein Interesse', value: visits.filter(v => v.keinInteresse).length, color: '#ef4444' },
+                { label: 'Offen', value: visits.filter(v => !v.entscheidungstraeger && !v.folgetermin && !v.keinInteresse).length, color: '#94a3b8' }
+            ].filter(d => d.value > 0);
+            
+            if (data.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Keine Daten verfügbar', width/2, height/2);
+                return;
+            }
+            
+            const total = data.reduce((sum, d) => sum + d.value, 0);
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 3;
+            
+            let currentAngle = -Math.PI / 2;
+            
+            data.forEach((segment, i) => {
+                const angle = (segment.value / total) * Math.PI * 2;
+                
+                // Draw segment
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
+                ctx.closePath();
+                ctx.fillStyle = segment.color;
+                ctx.fill();
+                
+                // Draw label
+                const labelAngle = currentAngle + angle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius * 1.3);
+                const labelY = centerY + Math.sin(labelAngle) * (radius * 1.3);
+                
+                ctx.fillStyle = '#334155';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = labelX > centerX ? 'left' : 'right';
+                ctx.fillText(`${segment.label}: ${segment.value}`, labelX, labelY);
+                
+                currentAngle += angle;
+            });
+            
+            // Draw center circle for donut effect
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Center text
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(total.toString(), centerX, centerY + 8);
+        }
+
+        // User Bar Chart
+        function drawUserBarChart() {
+            const canvas = document.getElementById('userChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const userStats = users.map(user => ({
+                name: user,
+                count: visits.filter(v => v.assignedUser === user).length
+            }));
+            
+            if (userStats.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Keine Benutzer vorhanden', width/2, height/2);
+                return;
+            }
+            
+            const maxCount = Math.max(...userStats.map(u => u.count), 1);
+            const barWidth = (width - 60) / userStats.length - 10;
+            const chartHeight = height - 60;
+            
+            userStats.forEach((user, i) => {
+                const barHeight = (user.count / maxCount) * chartHeight;
+                const x = 30 + i * (barWidth + 10);
+                const y = height - 30 - barHeight;
+                
+                // Draw bar with gradient
+                const gradient = ctx.createLinearGradient(0, y, 0, height - 30);
+                gradient.addColorStop(0, '#6366f1');
+                gradient.addColorStop(1, '#4f46e5');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                // Draw value on top
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(user.count.toString(), x + barWidth/2, y - 5);
+                
+                // Draw name
+                ctx.save();
+                ctx.translate(x + barWidth/2, height - 5);
+                ctx.rotate(-Math.PI/6);
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(user.name, 0, 0);
+                ctx.restore();
+            });
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(25, height - 30);
+            ctx.lineTo(width - 10, height - 30);
+            ctx.moveTo(25, 10);
+            ctx.lineTo(25, height - 30);
+            ctx.stroke();
+        }
+
+        // Timeline Chart
+        function drawTimelineChart() {
+            const canvas = document.getElementById('timelineChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Get last 7 days
+            const today = new Date();
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                days.push(date.toISOString().split('T')[0]);
+            }
+            
+            const data = days.map(day => ({
+                date: day,
+                count: visits.filter(v => v.datum === day).length
+            }));
+            
+            const maxCount = Math.max(...data.map(d => d.count), 1);
+            const pointSpacing = (width - 80) / (data.length - 1);
+            const chartHeight = height - 60;
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = 30 + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(40, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+            }
+            
+            // Draw line chart
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            data.forEach((point, i) => {
+                const x = 40 + i * pointSpacing;
+                const y = height - 30 - (point.count / maxCount) * chartHeight;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // Draw points and values
+            data.forEach((point, i) => {
+                const x = 40 + i * pointSpacing;
+                const y = height - 30 - (point.count / maxCount) * chartHeight;
+                
+                // Draw point
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#6366f1';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw value
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(point.count.toString(), x, y - 10);
+                
+                // Draw date
+                const dateStr = new Date(point.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+                ctx.font = '11px sans-serif';
+                ctx.fillText(dateStr, x, height - 10);
+            });
+            
+            // Draw axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, height - 30);
+            ctx.lineTo(width - 20, height - 30);
+            ctx.moveTo(40, 30);
+            ctx.lineTo(40, height - 30);
+            ctx.stroke();
+        }
+
+        // Funnel Chart
+        function drawFunnelChart() {
+            const container = document.getElementById('funnelChart');
+            const total = visits.length || 1;
+            
+            const stages = [
+                { label: 'Alle Besuche', value: visits.length, class: '' },
+                { label: 'Interessiert', value: visits.filter(v => !v.keinInteresse).length, class: 'success' },
+                { label: 'Entscheidungsträger', value: visits.filter(v => v.entscheidungstraeger).length, class: 'warning' },
+                { label: 'Folgetermin', value: visits.filter(v => v.folgetermin).length, class: 'danger' }
+            ];
+            
+            container.innerHTML = stages.map((stage, i) => {
+                const percentage = Math.round((stage.value / total) * 100);
+                const width = 100 - (i * 15);
+                return `
+                    <div class="funnel-segment ${stage.class}" style="width: ${width}%; margin: 0 auto;">
+                        ${stage.label}: ${stage.value} (${percentage}%)
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Gauge Chart (Success Rate)
+        function drawGaugeChart() {
+            const canvas = document.getElementById('gaugeChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const total = visits.length || 1;
+            const successful = visits.filter(v => v.entscheidungstraeger || v.folgetermin).length;
+            const percentage = Math.round((successful / total) * 100);
+            
+            const centerX = width / 2;
+            const centerY = height - 30;
+            const radius = Math.min(width, height) / 2 - 20;
+            
+            // Draw background arc
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, Math.PI, 0);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 20;
+            ctx.stroke();
+            
+            // Draw progress arc
+            const angle = Math.PI + (Math.PI * percentage / 100);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, Math.PI, angle);
+            
+            // Color based on percentage
+            let color = '#ef4444'; // red
+            if (percentage > 30) color = '#f59e0b'; // orange
+            if (percentage > 60) color = '#10b981'; // green
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 20;
+            ctx.stroke();
+            
+            // Update text
+            document.getElementById('successRateText').textContent = percentage + '%';
+            document.getElementById('successRateText').style.color = color;
+        }
+
+        // User Management
+        function toggleUsers() {
+            document.getElementById('userModal').classList.add('active');
+            renderUsers();
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('active');
+        }
+
+        function renderUsers() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = users.map(user => `
+                <div class="user-item">
+                    <span>${user}</span>
+                    <button class="btn btn-danger" onclick="removeUser('${user}')">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function addUser() {
+            const input = document.getElementById('newUserInput');
+            const newUser = input.value.trim();
+            
+            if (newUser && !users.includes(newUser)) {
+                users.push(newUser);
+                saveData();
+                renderUsers();
+                renderVisits();
+                input.value = '';
+                showToast('Benutzer hinzugefügt');
+            }
+        }
+
+        function removeUser(user) {
+            if (confirm(`Möchten Sie "${user}" wirklich entfernen?`)) {
+                users = users.filter(u => u !== user);
+                visits.forEach(visit => {
+                    if (visit.assignedUser === user) {
+                        visit.assignedUser = '';
+                    }
+                });
+                saveData();
+                renderUsers();
+                renderVisits();
+                showToast('Benutzer entfernt');
+            }
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const headers = ['Lokal Name', 'Entscheidungsträger', 'Folgetermin', 'Kein Interesse', 'Zugewiesen an', 'Kommentar', 'Datum'];
+            const rows = visits.map(v => [
+                v.lokalName || '',
+                v.entscheidungstraeger ? 'Ja' : 'Nein',
+                v.folgetermin ? 'Ja' : 'Nein',
+                v.keinInteresse ? 'Ja' : 'Nein',
+                v.assignedUser || '',
+                v.kommentar || '',
+                v.datum || ''
+            ]);
+            
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            csvContent += headers.join(';') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(';') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `sales_visits_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showToast('CSV exportiert');
+        }
+
+        // Save Data to LocalStorage
+        function saveData() {
+            localStorage.setItem('salesVisits', JSON.stringify(visits));
+            localStorage.setItem('salesUsers', JSON.stringify(users));
+        }
+
+        // Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('userModal');
+            if (event.target === modal) {
+                closeUserModal();
+            }
+        }
+    </script>
+</body>
+</html>
